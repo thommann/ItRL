@@ -1,3 +1,4 @@
+import pickle
 import random
 import time
 
@@ -104,3 +105,11 @@ class Network:
         Z = numpy.dot(self.W2, H)
         Y = logistic(Z)
         return Y, H
+
+def pickle_network(network):
+    with open("weigths.pcl", "wb") as f:
+        pickle.dump(network, f)
+
+def depickle():
+    with open("weigths.pcl", "rb") as f:
+        return pickle.load(f)

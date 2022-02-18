@@ -2,13 +2,13 @@ import random
 
 import numpy
 
-from Assignment.Network import Network, epsilon_greedy_policy
+from Assignment.Network import Network, epsilon_greedy_policy, pickle_network
 
 from matplotlib import pyplot
 import numpy as np
 
 
-network = Network(127, 58, 32)
+network = Network(512, 58, 32)
 
 class Chess:
     def __init__(self, initialize = True):
@@ -174,67 +174,53 @@ class Chess:
         new_board.done = self.done
         return new_board
 
+def main():
+    episodes = 200000
+    epsi = 0.4
+    gamma = 0.7
+    nr_steps = []
+    Qvalues = 2
+    for episode in range(episodes):
+        if episode % 100 == 0:
+            print(episode)
+            print(epsi)
+            #print(Qvalues)
+            epsi *= 0.999
+        chess = Chess()
+        Qvalues, H = network.forward(chess.state)
+        Qvalues -= (1 - chess.get_valid_actions()) * 100000
+        action = epsilon_greedy_policy(np.array([Qvalues]), epsi).T
+        count = 0
+        while True:
+            count += 1
+            chess_prime = chess.clone()
+            reward = chess.do_action(action)
+            Qvalues_prime, H_prime = network.forward(chess.state)
+            Qvalues_prime -= (1 - chess.get_valid_actions()) * 100000
+            next_action = epsilon_greedy_policy(np.array([Qvalues_prime]), epsi).T
+            Q_prime = Qvalues_prime[np.argmax(next_action)]
+            target = (reward + gamma * Q_prime) * action
+            output = Qvalues * action
+            network.descent(chess_prime.state, target, H, output)
+            action = next_action
+            Qvalues = Qvalues_prime
 
-episodes = 20000
-epsi = 0.4
-gamma = 0.7
-nr_steps = []
-Qvalues = 2
-for episode in range(episodes):
-    if episode % 100 == 0:
-        print(episode)
-        print(epsi)
-        #print(Qvalues)
-        epsi *= 0.99
-    chess = Chess()
-    Qvalues, H = network.forward(chess.state)
-    Qvalues -= (1 - chess.get_valid_actions()) * 100000
-    action = epsilon_greedy_policy(np.array([Qvalues]), epsi).T
-    count = 0
-    while True:
-        count += 1
-        chess_prime = chess.clone()
-        reward = chess.do_action(action)
-        Qvalues_prime, H_prime = network.forward(chess.state)
-        Qvalues_prime -= (1 - chess.get_valid_actions()) * 100000
-        next_action = epsilon_greedy_policy(np.array([Qvalues_prime]), epsi).T
-        Q_prime = Qvalues_prime[np.argmax(next_action)]
-        target = (reward + gamma * Q_prime) * action
-        output = Qvalues * action
-        network.descent(chess_prime.state, target, H, output)
-        action = next_action
-        Qvalues = Qvalues_prime
+            if chess.done:
+                nr_steps.append(count)
+                #print(count)
+                break
+            #chess.print()
+            chess.move_b()
+            #chess.print()
+    pyplot.plot(moving_average(nr_steps, 500))
+    pyplot.show()
 
-        if chess.done:
-            nr_steps.append(count)
-            #print(count)
-            break
-        #chess.print()
-        chess.move_b()
-        #chess.print()
+    pickle_network(network)
 
 def moving_average(x, w):
     return np.convolve(x, np.ones(w), 'valid') / w
-pyplot.plot(moving_average(nr_steps,500))
-pyplot.show()
 
-def test():
-    nr_steps = []
-    for i in range(2000):
-        test_chess = Chess()
-        count = 0
-        if i % 100 == 0:
-            print(i)
-        while True:
-            count +=1
-            test_Qvalues, _ = network.forward(test_chess.state)
-            test_Qvalues -= (1 - test_chess.get_valid_actions()) * 100000
-            a = epsilon_greedy_policy(np.array([test_Qvalues]), 0).T
-            test_chess.do_action(a)
-            if test_chess.done or count > 1000:
-                nr_steps.append(count)
-                break
-            test_chess.move_b()
-    pyplot.plot(moving_average(nr_steps, 200))
-    pyplot.show()
-test()
+
+
+if __name__ == "__main__":
+    main()
