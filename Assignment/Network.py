@@ -92,15 +92,45 @@ def _gradient_descent(X, T, W1, W2, W1_prev, W2_prev, B, eta, epochs, mu, loss):
     return numpy.array(losses)
 
 
+def epsilon_greedy_policy(Qvalues, epsilon):
+    N_class = numpy.shape(Qvalues)[1]
+    batch_size = numpy.shape(Qvalues)[0]
+
+    rand_values = numpy.random.uniform(0, 1, [batch_size])
+
+    rand_a = rand_values < epsilon
+    a = numpy.zeros([batch_size, N_class])
+
+    for i in range(batch_size):
+
+        if rand_a[i] == True:
+
+            a[i, numpy.random.randint(0, N_class)] = 1
+
+        else:
+
+            a[i, numpy.argmax(Qvalues[i])] = 1
+
+    return a
+
+
 class Network:
     W1, W2 = None, None
 
     def __init__(self):
         pass
 
+    # X: input
+    # T: target
+    # K: hidden layer size
+    # eta: learning rate
+    # epochs: nr. epochs
+    # B: batch size
+    # mu: momentum rate
     def learn(self, X, T, K, eta=0.001, epochs=10000, B=None, mu=0):
-        self.W1 = numpy.random.random((K + 1, X.shape[1])) * 2. - 1.
-        self.W2 = numpy.random.random((T.shape[1], K + 1)) * 2. - 1.
+        # Xavier initialization
+        self.W1 = numpy.random.randn(K + 1, X.shape[1]) * 1.0/numpy.sqrt(X.shape[1])
+        self.W2 = numpy.random.randn(T.shape[1], K + 1) * 1.0/numpy.sqrt(K + 1)
 
         W1_prev = self.W1
         W2_prev = self.W2

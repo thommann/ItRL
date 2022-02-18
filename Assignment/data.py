@@ -1,5 +1,5 @@
 import numpy
-import sklearn
+from sklearn import datasets
 
 
 def load_categorical_iris():
@@ -22,10 +22,10 @@ def _load_data(dataset):
 
 def _load_categorical(subj):
     if subj == "iris":
-        dataset = sklearn.datasets.load_iris()
+        dataset = datasets.load_iris()
         O = 3
     elif subj == "digits":
-        dataset = sklearn.datasets.load_digits()
+        dataset = datasets.load_digits()
         O = 10
     else:
         return
