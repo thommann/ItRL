@@ -6,35 +6,9 @@ from Assignment.Network import Network, epsilon_greedy_policy
 
 from matplotlib import pyplot
 import numpy as np
-#
-# X, T = data.load_categorical_digits()
-#
-# # Parameters
-# B = 100
-# K = 10
-# eta = 0.01
-# epochs = 10000
-# mu = 0.5
-#
-network = Network(30, 58, 32)
-#
-# loss = network.learn(X, T, K, eta=eta, epochs=epochs, B=B, mu=mu)
-#
-# pyplot.figure()
-#
-# ax1 = pyplot.gca()
-# ax2 = ax1.twinx()
-# ax1.set_xlabel("Epoch")
-#
-# ax1.loglog(loss[:, 0], color="tab:blue")
-# ax1.tick_params(axis="y", labelcolor="tab:blue")
-# ax1.set_ylabel("Loss", color="tab:blue")
-#
-# ax2.semilogx(loss[:, 1], color="tab:red")
-# ax2.tick_params(axis="y", labelcolor="tab:red")
-# ax2.set_ylabel("Accuracy", color="tab:red")
-#
-# pyplot.show()
+
+
+network = Network(127, 58, 32)
 
 class Chess:
     def __init__(self, initialize = True):
@@ -181,7 +155,7 @@ class Chess:
         return stacked.reshape((len(stacked), 1))
 
     def move_b(self):
-        fields, _ = chess.get_valid_fields_for_b()
+        fields, _ = self.get_valid_fields_for_b()
         move = random.choice(fields)
         self.b_king = np.zeros((4,4))
         self.b_king[move] = 1
@@ -201,7 +175,7 @@ class Chess:
         return new_board
 
 
-episodes = 100000
+episodes = 20000
 epsi = 0.4
 gamma = 0.7
 nr_steps = []
@@ -211,6 +185,7 @@ for episode in range(episodes):
         print(episode)
         print(epsi)
         #print(Qvalues)
+        epsi *= 0.99
     chess = Chess()
     Qvalues, H = network.forward(chess.state)
     Qvalues -= (1 - chess.get_valid_actions()) * 100000
@@ -237,10 +212,29 @@ for episode in range(episodes):
         #chess.print()
         chess.move_b()
         #chess.print()
-    if episode % 50 == 0:
-        epsi *= 0.999
 
 def moving_average(x, w):
     return np.convolve(x, np.ones(w), 'valid') / w
-pyplot.plot(moving_average(nr_steps,200))
+pyplot.plot(moving_average(nr_steps,500))
 pyplot.show()
+
+def test():
+    nr_steps = []
+    for i in range(2000):
+        test_chess = Chess()
+        count = 0
+        if i % 100 == 0:
+            print(i)
+        while True:
+            count +=1
+            test_Qvalues, _ = network.forward(test_chess.state)
+            test_Qvalues -= (1 - test_chess.get_valid_actions()) * 100000
+            a = epsilon_greedy_policy(np.array([test_Qvalues]), 0).T
+            test_chess.do_action(a)
+            if test_chess.done or count > 1000:
+                nr_steps.append(count)
+                break
+            test_chess.move_b()
+    pyplot.plot(moving_average(nr_steps, 200))
+    pyplot.show()
+test()
