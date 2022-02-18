@@ -201,13 +201,16 @@ class Chess:
         return new_board
 
 
-episodes = 10000
+episodes = 100000
 epsi = 0.4
-gamma = 0.1
+gamma = 0.7
 nr_steps = []
+Qvalues = 2
 for episode in range(episodes):
     if episode % 100 == 0:
         print(episode)
+        print(epsi)
+        #print(Qvalues)
     chess = Chess()
     Qvalues, H = network.forward(chess.state)
     Qvalues -= (1 - chess.get_valid_actions()) * 100000
@@ -217,14 +220,15 @@ for episode in range(episodes):
         count += 1
         chess_prime = chess.clone()
         reward = chess.do_action(action)
-        Qvalues, H_prime = network.forward(chess.state)
-        Qvalues -= (1 - chess.get_valid_actions()) * 100000
-        next_action = epsilon_greedy_policy(np.array([Qvalues]), epsi).T
-        Q_prime = Qvalues[np.argmax(next_action)]
+        Qvalues_prime, H_prime = network.forward(chess.state)
+        Qvalues_prime -= (1 - chess.get_valid_actions()) * 100000
+        next_action = epsilon_greedy_policy(np.array([Qvalues_prime]), epsi).T
+        Q_prime = Qvalues_prime[np.argmax(next_action)]
         target = (reward + gamma * Q_prime) * action
         output = Qvalues * action
         network.descent(chess_prime.state, target, H, output)
         action = next_action
+        Qvalues = Qvalues_prime
 
         if chess.done:
             nr_steps.append(count)
@@ -233,7 +237,10 @@ for episode in range(episodes):
         #chess.print()
         chess.move_b()
         #chess.print()
-    epsi *= 0.999
+    if episode % 50 == 0:
+        epsi *= 0.999
 
-pyplot.plot(nr_steps)
+def moving_average(x, w):
+    return np.convolve(x, np.ones(w), 'valid') / w
+pyplot.plot(moving_average(nr_steps,200))
 pyplot.show()

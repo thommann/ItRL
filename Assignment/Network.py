@@ -85,7 +85,7 @@ def epsilon_greedy_policy(Qvalues, epsilon):
 class Network:
     W1, W2 = None, None
 
-    def __init__(self, K, input_dim, output_dim, eta=0.001, mu=0):
+    def __init__(self, K, input_dim, output_dim, eta=0.01, mu=0):
         # Xavier initialization
         self.W1 = numpy.random.randn(K + 1, input_dim) * 1.0 / numpy.sqrt(input_dim)
         self.W2 = numpy.random.randn(output_dim, K + 1) * 1.0 / numpy.sqrt(K + 1)
