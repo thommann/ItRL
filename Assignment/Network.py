@@ -13,6 +13,10 @@ def logistic(A):
     return 1. / (1. + numpy.exp(-A))
 
 
+def relu(A):
+    return np.maximum(0, A)
+
+
 def softmax(Z):
     Y = numpy.exp(Z - numpy.max(Z))
     Y /= numpy.sum(Y, axis=0)
@@ -72,25 +76,28 @@ def epsilon_greedy_policy(Qvalues, epsilon):
 class Network:
     W1, W2 = None, None
 
-    def __init__(self, K, input_dim, output_dim, eta=0.01, mu=0):
+    def __init__(self, K, input_dim, output_dim, eta=0.1, mu=0, rms=0.9):
         # Xavier initialization
         self.W1 = numpy.random.randn(K + 1, input_dim) * 1.0 / numpy.sqrt(input_dim)
         self.W2 = numpy.random.randn(output_dim, K + 1) * 1.0 / numpy.sqrt(K + 1)
         self.eta = eta
         self.mu = mu
+        self.rms = rms
         self.V1 = np.zeros(self.W1.shape)
         self.V2 = np.zeros(self.W2.shape)
 
     def descent(self, X, T, H, Y):
         G1, G2 = _gradient(X, T, Y, H, self.W2)
-        self.W1 -= self.eta * G1
-        self.W2 -= self.eta * G2
+        self.V1 = self.rms * self.V1 + (1 - self.rms) * G1 ** 2
+        self.V2 = self.rms * self.V2 + (1 - self.rms) * G2 ** 2
+        self.W1 -= (self.eta / np.sqrt(self.V1 + _epsilon())) * G1
+        self.W2 -= (self.eta / np.sqrt(self.V2 + _epsilon())) * G2
 
     def forward(self, X):
-        H = logistic(numpy.dot(self.W1, X))
+        H = relu(numpy.dot(self.W1, X))
         H[0, :] = 1.
         Z = numpy.dot(self.W2, H)
-        Y = logistic(Z)
+        Y = relu(Z)
         return Y, H
 
 

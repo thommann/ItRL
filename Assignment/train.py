@@ -7,7 +7,7 @@ import numpy as np
 
 def train():
     network = Network(256, 58, 32)
-    episodes = 10000
+    episodes = 100000
     epsi = 0.4
     gamma = 0.7
     nr_moves = []
@@ -21,6 +21,7 @@ def train():
                   f"eta: {network.eta:.4f}",
                   end="")
             count_100_episodes = 0
+            epsi *= 0.999
 
         chess = Chess()
         Qvalues, H = network.forward(chess.state)

@@ -10,7 +10,7 @@ def test():
     network = depickle()
     nr_moves = []
     rewards = []
-    for i in range(1000):
+    for i in range(10000):
         test_chess = Chess()
         count = 0
         if i % 100 == 0:
