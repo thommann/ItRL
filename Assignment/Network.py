@@ -97,5 +97,5 @@ def pickle_network(network):
 
 
 def depickle():
-    with open("weigths_good.pcl", "rb") as f:
+    with open("weigths.pcl", "rb") as f:
         return pickle.load(f)

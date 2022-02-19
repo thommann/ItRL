@@ -133,9 +133,9 @@ class Chess:
                     q_valid_fields[i, j] = 1
 
         # Occupied
-        k_valid_fields[x_k, y_k] = 0
-        k_valid_fields[x_q, y_q] = 0
-        k_valid_fields[x_e, y_e] = 0
+        q_valid_fields[x_k, y_k] = 0
+        q_valid_fields[x_q, y_q] = 0
+        q_valid_fields[x_e, y_e] = 0
 
         stacked = np.hstack((k_valid_fields.flatten(), q_valid_fields.flatten()))
         return stacked.reshape((len(stacked), 1))

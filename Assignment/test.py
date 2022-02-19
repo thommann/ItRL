@@ -1,19 +1,19 @@
 import numpy as np
 from matplotlib import pyplot
 
+from Assignment.Chess import Chess
 from Assignment.Network import depickle, epsilon_greedy_policy
-from Assignment.playground import Chess, moving_average
-
-network = depickle()
+from Assignment.train import moving_average
 
 
 def test():
+    network = depickle()
     nr_steps = []
-    for i in range(1000):
+    for i in range(10000):
         test_chess = Chess()
         count = 0
         if i % 100 == 0:
-            print(i)
+            print(f"\r{i}", end="")
         while True:
             count += 1
             test_Qvalues, _ = network.forward(test_chess.state)
@@ -27,8 +27,9 @@ def test():
                 nr_steps.append(count)
                 break
             test_chess.move_b()
-    pyplot.plot(moving_average(nr_steps, 10))
+    pyplot.plot(moving_average(nr_steps, 100))
     pyplot.show()
 
 
-test()
+if __name__ == "__main__":
+    test()
