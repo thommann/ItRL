@@ -1,4 +1,6 @@
 import pandas as pd
+
+import pandas as pd
 from Assignment.Chess import Chess
 from Assignment.Helper import ewma_vectorized
 from Assignment.Network import Network, epsilon_greedy_policy, pickle_network
@@ -12,6 +14,7 @@ def train(strategy="sarsa"):
     episodes = 300000
     epsi = 0.4
     gamma = 0.7
+    beta = 0.99999
     nr_moves = []
     rewards_per_move = []
     rewards = []
@@ -85,11 +88,13 @@ def train(strategy="sarsa"):
     pyplot.title("Train: # Moves")
     pyplot.plot(pd.DataFrame(nr_moves).ewm(halflife=500).mean().to_numpy())
     pyplot.show()
+    pyplot.savefig("train_moves_sarsa.png")
 
     pyplot.figure()
     pyplot.title("Train: Reward per move")
     pyplot.plot(pd.DataFrame(rewards_per_move).ewm(halflife=500).mean().to_numpy())
     pyplot.show()
+    pyplot.savefig("train_reward_sarsa.png")
 
     pyplot.figure()
     pyplot.title("Train: Reward per game")
