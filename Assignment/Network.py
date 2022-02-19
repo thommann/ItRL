@@ -1,9 +1,7 @@
 import pickle
 import random
-import time
 
 import numpy
-import numpy as np
 
 
 def _epsilon():
@@ -39,23 +37,10 @@ def batch(X, T, B=None):
         index += B
 
 
-
-
-
-def _loss(X, T, W1, W2):
-    Y, H, Z = _forward(X, W1, W2)
-    J = - numpy.sum(numpy.sum(T * Y, axis=0) - numpy.log(numpy.sum(numpy.exp(Y), axis=0)))
-    A = categorical_accuracy(Y.T, T.T)
-    return [J, A], Y, H
-
-
 def _gradient(X, T, Y, H, W2):
     G1 = (2. / len(X)) * numpy.dot(numpy.dot(W2.T, (Y - T)) * H * (1. - H), X.T)
     G2 = (2. / len(X)) * numpy.dot((Y - T), H.T)
     return G1, G2
-
-
-
 
 
 def epsilon_greedy_policy(Qvalues, epsilon):
@@ -69,7 +54,7 @@ def epsilon_greedy_policy(Qvalues, epsilon):
 
     for i in range(batch_size):
 
-        if rand_a[i] == True:
+        if rand_a[i]:
             while 1:
                 randi = numpy.random.randint(0, N_class)
                 if Qvalues[i, randi] > -10000:
@@ -86,19 +71,17 @@ def epsilon_greedy_policy(Qvalues, epsilon):
 class Network:
     W1, W2 = None, None
 
-    def __init__(self, K, input_dim, output_dim, eta=0.2, mu=0):
+    def __init__(self, K, input_dim, output_dim, eta=0.01, mu=0):
         # Xavier initialization
         self.W1 = numpy.random.randn(K + 1, input_dim) * 1.0 / numpy.sqrt(input_dim)
         self.W2 = numpy.random.randn(output_dim, K + 1) * 1.0 / numpy.sqrt(K + 1)
         self.eta = eta
         self.mu = mu
 
-
     def descent(self, X, T, H, Y):
         G1, G2 = _gradient(X, T, Y, H, self.W2)
         self.W1 -= self.eta * G1
         self.W2 -= self.eta * G2
-        self.eta *= 0.999988
 
     def forward(self, X):
         H = logistic(numpy.dot(self.W1, X))
@@ -107,10 +90,12 @@ class Network:
         Y = logistic(Z)
         return Y, H
 
+
 def pickle_network(network):
     with open("weigths.pcl", "wb") as f:
         pickle.dump(network, f)
 
+
 def depickle():
-    with open("weigths.pcl", "rb") as f:
+    with open("weigths_good.pcl", "rb") as f:
         return pickle.load(f)

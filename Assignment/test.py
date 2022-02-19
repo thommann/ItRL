@@ -5,15 +5,17 @@ from Assignment.Network import depickle, epsilon_greedy_policy
 from Assignment.playground import Chess, moving_average
 
 network = depickle()
+
+
 def test():
     nr_steps = []
-    for i in range(6000):
+    for i in range(1000):
         test_chess = Chess()
         count = 0
         if i % 100 == 0:
             print(i)
         while True:
-            count +=1
+            count += 1
             test_Qvalues, _ = network.forward(test_chess.state)
             test_Qvalues -= (1 - test_chess.get_valid_actions()) * 100000
             a = epsilon_greedy_policy(np.array([test_Qvalues]), 0).T
@@ -25,6 +27,8 @@ def test():
                 nr_steps.append(count)
                 break
             test_chess.move_b()
-    pyplot.plot(moving_average(nr_steps, 700))
+    pyplot.plot(moving_average(nr_steps, 10))
     pyplot.show()
+
+
 test()
