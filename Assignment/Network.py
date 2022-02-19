@@ -86,7 +86,7 @@ def epsilon_greedy_policy(Qvalues, epsilon):
 class Network:
     W1, W2 = None, None
 
-    def __init__(self, K, input_dim, output_dim, eta=0.2, mu=0):
+    def __init__(self, K, input_dim, output_dim, eta=0.01, mu=0):
         # Xavier initialization
         self.W1 = numpy.random.randn(K + 1, input_dim) * 1.0 / numpy.sqrt(input_dim)
         self.W2 = numpy.random.randn(output_dim, K + 1) * 1.0 / numpy.sqrt(K + 1)
@@ -98,7 +98,6 @@ class Network:
         G1, G2 = _gradient(X, T, Y, H, self.W2)
         self.W1 -= self.eta * G1
         self.W2 -= self.eta * G2
-        self.eta *= 0.999988
 
     def forward(self, X):
         H = logistic(numpy.dot(self.W1, X))
@@ -108,9 +107,9 @@ class Network:
         return Y, H
 
 def pickle_network(network):
-    with open("weigths.pcl", "wb") as f:
+    with open("weigths_good_256.pcl", "wb") as f:
         pickle.dump(network, f)
 
 def depickle():
-    with open("weigths.pcl", "rb") as f:
+    with open("weigths_good_256.pcl", "rb") as f:
         return pickle.load(f)

@@ -21,8 +21,9 @@ def test():
             if test_chess.done:
                 nr_steps.append(count)
                 break
-            if count > 1000:
-                nr_steps.append(count)
+            if count > 100:
+                print("bogo hit")
+                nr_steps.append(1000)
                 break
             test_chess.move_b()
     pyplot.plot(moving_average(nr_steps, 700))

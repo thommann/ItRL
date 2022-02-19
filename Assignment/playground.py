@@ -2,14 +2,14 @@ import random
 
 import numpy
 
-from Assignment.Network import Network, epsilon_greedy_policy, pickle_network
+from Assignment.Network import Network, epsilon_greedy_policy, pickle_network, depickle
 
 from matplotlib import pyplot
 import numpy as np
 
 
-network = Network(255, 58, 32)
-
+network = Network(256, 58, 32)
+#network = depickle()
 class Chess:
     def __init__(self, initialize = True):
         self.w_king = None
@@ -180,20 +180,25 @@ def main():
     gamma = 0.7
     nr_steps = []
     Qvalues = 2
-    count = 0
+    count_2 = 0
     for episode in range(episodes):
+        if episode == 150000:
+            network.eta /= 2
         if episode % 100 == 0:
-            print(f"\rEpi: {episode}, epsi: {epsi:.3f}, avg. steps: {count/100:.2f}", end="")
+            print(f"\rEpi: {episode}, epsi: {epsi:.3f}, avg. stepsi: {count_2/100:.2f}, learni: {network.eta:.4f}", end="")
             #print(Qvalues)
-            epsi *= 0.999
-            count = 0
+            epsi *= 0.997
+            count_2 = 0
 
         chess = Chess()
         Qvalues, H = network.forward(chess.state)
         Qvalues -= (1 - chess.get_valid_actions()) * 100000
         action = epsilon_greedy_policy(np.array([Qvalues]), epsi).T
+        # network.eta *= 0.999988
+        count_1 = 0
         while True:
-            count += 1
+            count_1 += 1
+            count_2 += 1
             chess_prime = chess.clone()
             reward = chess.do_action(action)
             Qvalues_prime, H_prime = network.forward(chess.state)
@@ -207,7 +212,7 @@ def main():
             Qvalues = Qvalues_prime
 
             if chess.done:
-                nr_steps.append(count)
+                nr_steps.append(count_1)
                 #print(count)
                 break
             #chess.print()
