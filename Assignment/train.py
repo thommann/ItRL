@@ -6,24 +6,14 @@ import numpy as np
 
 
 def train():
-<<<<<<< HEAD
-    network = Network(1024, 58, 32)
-    episodes = 300000
-=======
     network = Network(256, 58, 32)
     episodes = 10000
->>>>>>> ac46be9ac11471135a47ffa6b6964bc5988d8f91
     epsi = 0.4
     gamma = 0.7
     nr_moves = []
     rewards = []
     count_100_episodes = 0
     for episode in range(episodes):
-<<<<<<< HEAD
-        if episode == 150000 or episode == 200000:
-            network.eta /= 2
-=======
->>>>>>> ac46be9ac11471135a47ffa6b6964bc5988d8f91
         if episode % 100 == 0:
             print(f"\repisode: {episode}, "
                   f"epsilon: {epsi:.3f}, "
@@ -52,12 +42,8 @@ def train():
             network.descent(chess_prime.state, target, H, output)
             action = next_action
             Qvalues = Qvalues_prime
-<<<<<<< HEAD
-            H = H_prime
-=======
             total_reward += reward
 
->>>>>>> ac46be9ac11471135a47ffa6b6964bc5988d8f91
             if chess.done:
                 nr_moves.append(count_episode)
                 rewards.append(total_reward/count_episode)
