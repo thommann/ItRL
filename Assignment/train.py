@@ -1,3 +1,5 @@
+import pandas as pd
+
 from Assignment.Chess import Chess
 from Assignment.Network import Network, epsilon_greedy_policy, pickle_network
 
@@ -10,6 +12,7 @@ def train(strategy="sarsa"):
     episodes = 100000
     epsi = 0.4
     gamma = 0.7
+    beta = 0.99999
     nr_moves = []
     rewards = []
     count_100_episodes = 0
@@ -23,14 +26,12 @@ def train(strategy="sarsa"):
                   f"W2: {np.min(network.W2):.4f}, {np.max(network.W2):.4f}",
                   end="")
             count_100_episodes = 0
-            epsi *= 0.999
 
         chess = Chess()
         Qvalues, H = network.forward(chess.state)
         Qvalues -= (1 - chess.get_valid_actions()) * 100000
         action = epsilon_greedy_policy(np.array([Qvalues]), epsi).T
         count_episode = 0
-        total_reward = 0
         while True:
             count_episode += 1
             count_100_episodes += 1
@@ -62,23 +63,28 @@ def train(strategy="sarsa"):
                 print(f"Illegal strategy: {strategy}!")
                 break
 
-            total_reward += reward
-
             if chess.done:
                 nr_moves.append(count_episode)
-                rewards.append(total_reward/count_episode)
+                rewards.append(reward)
                 break
             chess.move_b()
+    # Decay epsilon
+    epsi *= beta
+
+    ema_moves = pd.DataFrame(nr_moves).ewm(halflife=1000).mean()
+    ema_rewards = pd.DataFrame(rewards).ewm(halflife=1000).mean()
 
     pyplot.figure()
     pyplot.title("Train: # Moves")
-    pyplot.plot(moving_average(nr_moves, 500))
+    pyplot.plot(ema_moves)
     pyplot.show()
+    pyplot.savefig("train_moves_sarsa.png")
 
     pyplot.figure()
     pyplot.title("Train: Reward")
-    pyplot.plot(moving_average(rewards, 500))
+    pyplot.plot(ema_rewards)
     pyplot.show()
+    pyplot.savefig("train_reward_sarsa.png")
 
     pickle_network(network)
 
