@@ -7,25 +7,24 @@ import numpy as np
 
 
 def train():
-    network = Network(256, 58, 32)
-    episodes = 25000
+    network = Network(512, 58, 32)
+    episodes = 20000
     epsi = 0.4
     gamma = 0.7
     nr_steps = []
     Qvalues = 2
     count_2 = 0
+    _rewards=[]
     experiences = []
-    batch_size = 50
-    relevant_histories = 200
+    batch_size = 200
+    relevant_histories = 600
     for episode in range(episodes):
-        if episode == 15000 or episode == 17000:
+        if episode in [10000, 13000, 15000, 17000]:
             network.eta /= 3
-            relevant_histories = 400
-            batch_size = 94
         if episode % 100 == 0:
             print(f"\rEpi: {episode}, epsi: {epsi:.3f}, avg. stepsi: {count_2 / 100:.2f}, learni: {network.eta:.4f}",
                   end="")
-            epsi *= 0.95
+            epsi *= 0.96
             count_2 = 0
 
         chess = Chess()
@@ -38,7 +37,7 @@ def train():
             Qvalues -= (1 - chess.get_valid_actions()) * 100000
             action = epsilon_greedy_policy(np.array([Qvalues]), epsi).T
             reward = chess.do_action(action)
-
+            _rewards.append(reward)
             expi = Experience(chess_prime.state, chess.state, action, reward)
             experiences.append(expi)
             if len(experiences) > relevant_histories:
@@ -62,7 +61,15 @@ def train():
                 nr_steps.append(count_1)
                 break
             chess.move_b()
-    pyplot.plot(moving_average(nr_steps, 50))
+
+    pyplot.figure()
+    pyplot.title("Train: # Moves")
+    pyplot.plot(moving_average(nr_steps, 500))
+    pyplot.show()
+
+    pyplot.figure()
+    pyplot.title("Train: Reward")
+    pyplot.plot(moving_average(_rewards, 500))
     pyplot.show()
 
     pickle_network(network)
