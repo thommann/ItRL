@@ -23,7 +23,9 @@ def test():
             a = epsilon_greedy_policy(np.array([test_Qvalues]), 0).T
             reward = test_chess.do_action(a)
             total_reward += reward
-            if test_chess.done or count > 1000:
+            if test_chess.done or count > 100:
+                if count > 100:
+                    print("Bogo hit")
                 nr_moves.append(count)
                 rewards.append(total_reward / count)
                 break
