@@ -1,7 +1,9 @@
+import pickle
 import random
 import time
 
 import numpy
+import numpy as np
 
 
 def _epsilon():
@@ -37,12 +39,7 @@ def batch(X, T, B=None):
         index += B
 
 
-def _forward(X, W1, W2):
-    H = logistic(numpy.dot(W1, X))
-    H[0, :] = 1.
-    Z = numpy.dot(W2, H)
-    Y = logistic(Z)
-    return Y, H, Z
+
 
 
 def _loss(X, T, W1, W2):
@@ -58,38 +55,7 @@ def _gradient(X, T, Y, H, W2):
     return G1, G2
 
 
-def _descent(X, T, W1, W2, eta, W1_prev, W2_prev, mu, loss):
-    J, Y, H = loss(X, T, W1, W2)
-    G1, G2 = _gradient(X, T, Y, H, W2)
-    W1 -= (1 - mu) * eta * G1 - mu * (W1 - W1_prev)
-    W2 -= (1 - mu) * eta * G2 - mu * (W2 - W2_prev)
-    return J
 
-
-def _gradient_descent(X, T, W1, W2, W1_prev, W2_prev, B, eta, epochs, mu, loss):
-    print(F"Performing Gradient Descent for {epochs} epochs.")
-    losses = []
-    start = time.time()
-    for epoch in range(epochs):
-        for x, t in batch(X, T, B):
-            W1_copy = W1.copy()
-            W2_copy = W2.copy()
-
-            _descent(x.T, t.T, W1, W2, eta, W1_prev, W2_prev, mu, loss)
-
-            W1_prev = W1_copy
-            W2_prev = W2_copy
-
-        J, Y, _ = loss(X.T, T.T, W1, W2)
-        losses.append(J)
-        if len(J) > 1:
-            print(F"\repoch: {epoch} - loss: {J[0]} - accuracy: {J[1]} - time: {time.time() - start}", end="",
-                  flush=True)
-        else:
-            print(F"\repoch: {epoch} - loss: {J[0]} - time: {time.time() - start}", end="", flush=True)
-
-    print()
-    return numpy.array(losses)
 
 
 def epsilon_greedy_policy(Qvalues, epsilon):
@@ -104,8 +70,11 @@ def epsilon_greedy_policy(Qvalues, epsilon):
     for i in range(batch_size):
 
         if rand_a[i] == True:
-
-            a[i, numpy.random.randint(0, N_class)] = 1
+            while 1:
+                randi = numpy.random.randint(0, N_class)
+                if Qvalues[i, randi] > -10000:
+                    break
+            a[i, randi] = 1
 
         else:
 
@@ -117,25 +86,30 @@ def epsilon_greedy_policy(Qvalues, epsilon):
 class Network:
     W1, W2 = None, None
 
-    def __init__(self):
-        pass
-
-    # X: input
-    # T: target
-    # K: hidden layer size
-    # eta: learning rate
-    # epochs: nr. epochs
-    # B: batch size
-    # mu: momentum rate
-    def learn(self, X, T, K, eta=0.001, epochs=10000, B=None, mu=0):
+    def __init__(self, K, input_dim, output_dim, eta=0.01, mu=0):
         # Xavier initialization
-        self.W1 = numpy.random.randn(K + 1, X.shape[1]) * 1.0/numpy.sqrt(X.shape[1])
-        self.W2 = numpy.random.randn(T.shape[1], K + 1) * 1.0/numpy.sqrt(K + 1)
+        self.W1 = numpy.random.randn(K + 1, input_dim) * 1.0 / numpy.sqrt(input_dim)
+        self.W2 = numpy.random.randn(output_dim, K + 1) * 1.0 / numpy.sqrt(K + 1)
+        self.eta = eta
+        self.mu = mu
 
-        W1_prev = self.W1
-        W2_prev = self.W2
 
-        return _gradient_descent(X, T, self.W1, self.W2, W1_prev, W2_prev, B, eta, epochs, mu, _loss)
+    def descent(self, X, T, H, Y):
+        G1, G2 = _gradient(X, T, Y, H, self.W2)
+        self.W1 -= self.eta * G1
+        self.W2 -= self.eta * G2
 
-    def predict(self, X):
-        return _forward(X.T, self.W1, self.W2)[0].T
+    def forward(self, X):
+        H = logistic(numpy.dot(self.W1, X))
+        H[0, :] = 1.
+        Z = numpy.dot(self.W2, H)
+        Y = logistic(Z)
+        return Y, H
+
+def pickle_network(network):
+    with open("weigths.pcl", "wb") as f:
+        pickle.dump(network, f)
+
+def depickle():
+    with open("weigths.pcl", "rb") as f:
+        return pickle.load(f)

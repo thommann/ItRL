@@ -1,44 +1,23 @@
-from Assignment import data
-from Assignment.Network import Network, epsilon_greedy_policy
+import random
+
+import numpy
+
+from Assignment.Network import Network, epsilon_greedy_policy, pickle_network
 
 from matplotlib import pyplot
 import numpy as np
-#
-# X, T = data.load_categorical_digits()
-#
-# # Parameters
-# B = 100
-# K = 10
-# eta = 0.01
-# epochs = 10000
-# mu = 0.5
-#
-# network = Network()
-#
-# loss = network.learn(X, T, K, eta=eta, epochs=epochs, B=B, mu=mu)
-#
-# pyplot.figure()
-#
-# ax1 = pyplot.gca()
-# ax2 = ax1.twinx()
-# ax1.set_xlabel("Epoch")
-#
-# ax1.loglog(loss[:, 0], color="tab:blue")
-# ax1.tick_params(axis="y", labelcolor="tab:blue")
-# ax1.set_ylabel("Loss", color="tab:blue")
-#
-# ax2.semilogx(loss[:, 1], color="tab:red")
-# ax2.tick_params(axis="y", labelcolor="tab:red")
-# ax2.set_ylabel("Accuracy", color="tab:red")
-#
-# pyplot.show()
+
+
+network = Network(512, 58, 32)
 
 class Chess:
-    def __init__(self):
+    def __init__(self, initialize = True):
         self.w_king = None
         self.w_queen = None
         self.b_king = None
-        self.initialize_state()
+        if initialize:
+            self.initialize_state()
+        self.done = False
 
 
     def initialize_state(self):
@@ -90,21 +69,49 @@ class Chess:
             print()
         print("  0 1 2 3")
 
-    def game_status(self):
+    def get_valid_fields_for_b(self):
         x_e, y_e = np.unravel_index(np.argmax(self.b_king), self.b_king.shape)
-        x_k, y_k = np.unravel_index(np.argmax(self._king), self.b_king.shape)
-        x_q, y_q = np.unravel_index(np.argmax(self.b_king), self.b_king.shape)
-
+        x_k, y_k = np.unravel_index(np.argmax(self.w_king), self.w_king.shape)
+        x_q, y_q = np.unravel_index(np.argmax(self.w_queen), self.w_queen.shape)
+        valid_field = []
         for i in range(max(0, x_e - 1), min(4, x_e + 2)):
             for j in range(max(0, y_e - 1), min(4, y_e + 2)):
+                if abs(i - x_k) <= 1 and abs(j - y_k) <= 1:  # Adjacent to king
+                    continue
+                if (i == x_q or j == y_q or i - j == x_q - y_q or i + j == x_q + y_q) and not (
+                        i - x_q == (x_k - x_q) * 3 and j - y_q == (
+                        y_k - y_q) * 3):  # attacked by Queen and not in shadow
+                    continue
+                valid_field.append((i, j))
+        checked = (x_e == x_q or y_e == y_q or x_e - y_e == x_q - y_q or x_e + y_e == x_q + y_q) and not (x_e - x_q == (x_k - x_q) * 3 and y_e - y_q == (y_k - y_q) * 3)
+        return valid_field, checked
 
-
+    def game_status(self):
+        valid_field, checked = self.get_valid_fields_for_b()
+        nr_moves = np.zeros((8,))
+        nr_moves[len(valid_field)] = 1
+        checked_oh = np.zeros((2,))
+        checked_oh[int(checked)] = 1
+        return nr_moves, checked_oh
 
     def do_action(self, action):
         idx = np.argmax(action)
         if idx < 16:  # King Moves
             new_pos = np.reshape(action[:16], (4, 4))
             self.w_king = new_pos
+        else:
+            new_pos = np.reshape(action[16:], (4, 4))
+            self.w_queen = new_pos
+        nr_moves, checked = self.game_status()
+        reward = 0.0
+        if nr_moves[0] == 1 and checked[1] == 1:
+            reward = 1.0
+            self.done = True
+        elif nr_moves[0] == 1:
+            reward = -0.1
+            self.done = True
+        return reward
+
 
     def get_valid_actions(self):
         x_e, y_e = np.unravel_index(np.argmax(self.b_king), self.b_king.shape)
@@ -144,27 +151,76 @@ class Chess:
         q_valid_fields -= (self.w_king + self.w_queen + self.b_king)
         q_valid_fields[np.where(q_valid_fields < 0)] = 0
 
-        return np.hstack((k_valid_fields.flatten(), q_valid_fields.flatten()))
+        stacked = np.hstack((k_valid_fields.flatten(), q_valid_fields.flatten()))
+        return stacked.reshape((len(stacked), 1))
 
+    def move_b(self):
+        fields, _ = self.get_valid_fields_for_b()
+        move = random.choice(fields)
+        self.b_king = np.zeros((4,4))
+        self.b_king[move] = 1
 
-
+    @property
+    def state(self):
+        nr_moves, checked_oh = self.game_status()
+        stacked = numpy.hstack((self.w_king.flatten(), self.w_queen.flatten(), self.b_king.flatten(), nr_moves, checked_oh))
+        return stacked.reshape((len(stacked), 1))
 
     def clone(self):
-        pass
+        new_board = Chess(False)
+        new_board.b_king = np.copy(self.b_king)
+        new_board.w_king = np.copy(self.w_king)
+        new_board.w_queen = np.copy(self.w_queen)
+        new_board.done = self.done
+        return new_board
 
-chess = Chess()
-chess.print()
-print(chess.get_valid_actions())
-#
-# episodes = 100
-#
-# for episode in range(episodes):
-#     chess = Chess()
-#     Qvalues = network.predict(chess.state)
-#     action = epsilon_greedy_policy(Qvalues, 0.4)
-#     while True:
-#         chess_prime = chess.clone()
-#         reward = chess.do_action(action)
-#         next_Qvalues = network.predict(chess.state)
-#         next_action = epsilon_greedy_policy(next_Qvalues)
+def main():
+    episodes = 200000
+    epsi = 0.4
+    gamma = 0.7
+    nr_steps = []
+    Qvalues = 2
+    for episode in range(episodes):
+        if episode % 100 == 0:
+            print(episode)
+            print(epsi)
+            #print(Qvalues)
+            epsi *= 0.999
+        chess = Chess()
+        Qvalues, H = network.forward(chess.state)
+        Qvalues -= (1 - chess.get_valid_actions()) * 100000
+        action = epsilon_greedy_policy(np.array([Qvalues]), epsi).T
+        count = 0
+        while True:
+            count += 1
+            chess_prime = chess.clone()
+            reward = chess.do_action(action)
+            Qvalues_prime, H_prime = network.forward(chess.state)
+            Qvalues_prime -= (1 - chess.get_valid_actions()) * 100000
+            next_action = epsilon_greedy_policy(np.array([Qvalues_prime]), epsi).T
+            Q_prime = Qvalues_prime[np.argmax(next_action)]
+            target = (reward + gamma * Q_prime) * action
+            output = Qvalues * action
+            network.descent(chess_prime.state, target, H, output)
+            action = next_action
+            Qvalues = Qvalues_prime
 
+            if chess.done:
+                nr_steps.append(count)
+                #print(count)
+                break
+            #chess.print()
+            chess.move_b()
+            #chess.print()
+    pyplot.plot(moving_average(nr_steps, 500))
+    pyplot.show()
+
+    pickle_network(network)
+
+def moving_average(x, w):
+    return np.convolve(x, np.ones(w), 'valid') / w
+
+
+
+if __name__ == "__main__":
+    main()
