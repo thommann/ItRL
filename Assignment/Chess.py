@@ -97,14 +97,14 @@ class Chess:
             self.w_queen = (x, y)
 
         nr_moves, checked = self.game_status()
-        reward = 0.0
+        reward = -0.01
         if nr_moves[0] == 1 and checked[1] == 1:
             # Check
             reward = 1.0
             self.done = True
         elif nr_moves[0] == 1:
             # Stale
-            reward = -0.1
+            reward = -1.0
             self.done = True
         return reward
 
