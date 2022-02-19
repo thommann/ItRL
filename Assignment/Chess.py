@@ -49,7 +49,7 @@ class Chess:
         for i in range(max(0, x_e - 1), min(4, x_e + 2)):
             for j in range(max(0, y_e - 1), min(4, y_e + 2)):
                 field = (i, j)
-                if not self.checked(field):
+                if not self.checked(field) and not (i == x_e and j == y_e):
                     valid_fields.append(field)
         return valid_fields
 
@@ -106,6 +106,7 @@ class Chess:
             # Stale
             reward = -1.0
             self.done = True
+        #self.print()
         return reward
 
     def get_valid_actions(self):
@@ -128,7 +129,7 @@ class Chess:
         for i in range(4):
             for j in range(4):
                 if self.checked_by_queen((i, j)) \
-                        and not (abs(i - x_e) <= 1 and abs(j - y_e) <= 1 and (abs(i - x_k) > 1 or abs(j - y_k) > 1)):
+                        and not ((abs(i - x_e) <= 1 and abs(j - y_e) <= 1) and (abs(i - x_k) > 1 or abs(j - y_k) > 1)):
                     # Reachable and protected
                     q_valid_fields[i, j] = 1
 
@@ -143,6 +144,7 @@ class Chess:
     def move_b(self):
         fields = self.get_valid_fields_for_b()
         self.b_king = random.choice(fields)
+
 
     @property
     def state(self):

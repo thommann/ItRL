@@ -7,7 +7,7 @@ import numpy as np
 
 
 def train():
-    network = Network(512, 58, 32)
+    network = Network(256, 58, 32)
     episodes = 20000
     epsi = 0.4
     gamma = 0.7
@@ -72,7 +72,7 @@ def train():
     pyplot.plot(moving_average(_rewards, 500))
     pyplot.show()
 
-    pickle_network(network)
+    pickle_network(network, "q-experience-replay-256.pcl")
 
 
 def moving_average(x, w):

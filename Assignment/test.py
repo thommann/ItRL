@@ -6,11 +6,12 @@ from Assignment.Network import depickle, epsilon_greedy_policy
 from Assignment.train import moving_average
 
 
-def test():
-    network = depickle()
+def test(filename = "sarsa-256.pcl"):
+    network = depickle(filename)
     nr_moves = []
     rewards = []
     rewards = []
+    bogos = 0
     for i in range(10000):
         test_chess = Chess()
         count = 0
@@ -21,12 +22,14 @@ def test():
             count += 1
             test_Qvalues, _ = network.forward(test_chess.state)
             test_Qvalues -= (1 - test_chess.get_valid_actions()) * 100000
-            a = epsilon_greedy_policy(np.array([test_Qvalues]), 0).T
+            a = epsilon_greedy_policy(np.array(test_Qvalues), 0).T
             reward = test_chess.do_action(a)
             total_reward += reward
             if test_chess.done or count > 100:
                 if count > 100:
-                    print("Bogo hit")
+                    bogos += 1
+                    if bogos % 20 == 0:
+                        print(f"Bogo hit: {bogos}")
                 nr_moves.append(count)
                 rewards.append(total_reward / count)
                 break

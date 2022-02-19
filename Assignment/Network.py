@@ -47,8 +47,8 @@ def _gradient(X, T, Y, H, W2):
 
 
 def epsilon_greedy_policy(Qvalues, epsilon):
-    N_class = np.shape(Qvalues)[1]
-    batch_size = np.shape(Qvalues)[0]
+    N_class = np.shape(Qvalues)[0]
+    batch_size = np.shape(Qvalues)[1]
 
     rand_values = np.random.uniform(0, 1, [batch_size])
 
@@ -58,23 +58,26 @@ def epsilon_greedy_policy(Qvalues, epsilon):
     for i in range(batch_size):
 
         if rand_a[i]:
+            #print("epsilon")
             while 1:
                 randi = np.random.randint(0, N_class)
-                if Qvalues[i, randi] > -10000:
+                if Qvalues[randi, i] > -10000:
                     break
             a[i, randi] = 1
 
         else:
+            #print("greedy")
+            a[i, np.argmax(Qvalues[:,i])] = 1
 
-            a[i, np.argmax(Qvalues[i])] = 1
-
+    #print(np.argmax(a))
+    #print(Qvalues[np.argmax(a),0])
     return a
 
 
 class Network:
     W1, W2 = None, None
 
-    def __init__(self, K, input_dim, output_dim, eta=0.01, mu=0, rho=0.9, rmsprop=False):
+    def __init__(self, K, input_dim, output_dim, eta=0.02, mu=0, rho=0.9, rmsprop=False):
         # Xavier initialization
         self.W1 = np.random.randn(K + 1, input_dim) * 1.0 / np.sqrt(input_dim)
         self.W2 = np.random.randn(output_dim, K + 1) * 1.0 / np.sqrt(K + 1)
@@ -111,11 +114,11 @@ class Network:
         return Y, H
 
 
-def pickle_network(network):
-    with open("weigths.pcl", "wb") as f:
+def pickle_network(network, file_name):
+    with open(file_name, "wb") as f:
         pickle.dump(network, f)
 
 
-def depickle():
-    with open("weigths.pcl", "rb") as f:
+def depickle(file_name):
+    with open(file_name, "rb") as f:
         return pickle.load(f)
