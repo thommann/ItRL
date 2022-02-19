@@ -98,10 +98,10 @@ class Network:
 
 
 def pickle_network(network):
-    with open("weigths.pcl", "wb") as f:
+    with open("weigths_good_256.pcl", "wb") as f:
         pickle.dump(network, f)
 
 
 def depickle():
-    with open("weigths.pcl", "rb") as f:
+    with open("weigths_good_256.pcl", "rb") as f:
         return pickle.load(f)
