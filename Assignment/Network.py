@@ -1,6 +1,5 @@
 import pickle
 import random
-import time
 
 import numpy
 import numpy as np
@@ -39,23 +38,10 @@ def batch(X, T, B=None):
         index += B
 
 
-
-
-
-def _loss(X, T, W1, W2):
-    Y, H, Z = _forward(X, W1, W2)
-    J = - numpy.sum(numpy.sum(T * Y, axis=0) - numpy.log(numpy.sum(numpy.exp(Y), axis=0)))
-    A = categorical_accuracy(Y.T, T.T)
-    return [J, A], Y, H
-
-
 def _gradient(X, T, Y, H, W2):
     G1 = (2. / len(X)) * numpy.dot(numpy.dot(W2.T, (Y - T)) * H * (1. - H), X.T)
     G2 = (2. / len(X)) * numpy.dot((Y - T), H.T)
     return G1, G2
-
-
-
 
 
 def epsilon_greedy_policy(Qvalues, epsilon):
@@ -69,7 +55,7 @@ def epsilon_greedy_policy(Qvalues, epsilon):
 
     for i in range(batch_size):
 
-        if rand_a[i] == True:
+        if rand_a[i]:
             while 1:
                 randi = numpy.random.randint(0, N_class)
                 if Qvalues[i, randi] > -10000:
@@ -92,7 +78,8 @@ class Network:
         self.W2 = numpy.random.randn(output_dim, K + 1) * 1.0 / numpy.sqrt(K + 1)
         self.eta = eta
         self.mu = mu
-
+        self.V1 = np.zeros(self.W1.shape)
+        self.V2 = np.zeros(self.W2.shape)
 
     def descent(self, X, T, H, Y):
         G1, G2 = _gradient(X, T, Y, H, self.W2)
@@ -106,9 +93,11 @@ class Network:
         Y = logistic(Z)
         return Y, H
 
+
 def pickle_network(network):
     with open("weigths_good_256.pcl", "wb") as f:
         pickle.dump(network, f)
+
 
 def depickle():
     with open("weigths_good_256.pcl", "rb") as f:
