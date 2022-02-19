@@ -5,9 +5,9 @@ from matplotlib import pyplot
 import numpy as np
 
 
-def train():
+def train(strategy="sarsa"):
     network = Network(256, 58, 32)
-    episodes = 10000
+    episodes = 100000
     epsi = 0.4
     gamma = 0.7
     nr_moves = []
@@ -18,9 +18,12 @@ def train():
             print(f"\repisode: {episode}, "
                   f"epsilon: {epsi:.3f}, "
                   f"moves: {count_100_episodes / 100:.2f}, "
-                  f"eta: {network.eta:.4f}",
+                  f"eta: {network.eta:.4f}, "
+                  f"W1: {np.min(network.W1):.4f}, {np.max(network.W1):.4f}, "
+                  f"W2: {np.min(network.W2):.4f}, {np.max(network.W2):.4f}",
                   end="")
             count_100_episodes = 0
+            epsi *= 0.999
 
         chess = Chess()
         Qvalues, H = network.forward(chess.state)
@@ -35,13 +38,30 @@ def train():
             reward = chess.do_action(action)
             Qvalues_prime, H_prime = network.forward(chess.state)
             Qvalues_prime -= (1 - chess.get_valid_actions()) * 100000
-            next_action = epsilon_greedy_policy(np.array([Qvalues_prime]), epsi).T
+
+            if strategy == "sarsa":
+                next_action = epsilon_greedy_policy(np.array([Qvalues_prime]), epsi).T
+            elif strategy == "q":
+                next_action = epsilon_greedy_policy(np.array([Qvalues_prime]), 0).T
+            else:
+                print(f"Illegal strategy: {strategy}!")
+                break
+
             Q_prime = Qvalues_prime[np.argmax(next_action)]
             target = (reward + gamma * Q_prime) * action
             output = Qvalues * action
             network.descent(chess_prime.state, target, H, output)
-            action = next_action
+
             Qvalues = Qvalues_prime
+            H = H_prime
+            if strategy == "sarsa":
+                action = next_action
+            elif strategy == "q":
+                action = epsilon_greedy_policy(np.array([Qvalues_prime]), epsi).T
+            else:
+                print(f"Illegal strategy: {strategy}!")
+                break
+
             total_reward += reward
 
             if chess.done:
