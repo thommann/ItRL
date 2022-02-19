@@ -7,7 +7,7 @@ from Assignment.playground import Chess, moving_average
 network = depickle()
 def test():
     nr_steps = []
-    for i in range(2000):
+    for i in range(6000):
         test_chess = Chess()
         count = 0
         if i % 100 == 0:
@@ -23,7 +23,8 @@ def test():
                 break
             if count > 1000:
                 nr_steps.append(count)
+                break
             test_chess.move_b()
-    pyplot.plot(moving_average(nr_steps, 200))
+    pyplot.plot(moving_average(nr_steps, 700))
     pyplot.show()
 test()

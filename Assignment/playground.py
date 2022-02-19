@@ -8,7 +8,7 @@ from matplotlib import pyplot
 import numpy as np
 
 
-network = Network(512, 58, 32)
+network = Network(255, 58, 32)
 
 class Chess:
     def __init__(self, initialize = True):
@@ -175,22 +175,23 @@ class Chess:
         return new_board
 
 def main():
-    episodes = 200000
+    episodes = 300000
     epsi = 0.4
     gamma = 0.7
     nr_steps = []
     Qvalues = 2
+    count = 0
     for episode in range(episodes):
         if episode % 100 == 0:
-            print(episode)
-            print(epsi)
+            print(f"\rEpi: {episode}, epsi: {epsi:.3f}, avg. steps: {count/100:.2f}", end="")
             #print(Qvalues)
             epsi *= 0.999
+            count = 0
+
         chess = Chess()
         Qvalues, H = network.forward(chess.state)
         Qvalues -= (1 - chess.get_valid_actions()) * 100000
         action = epsilon_greedy_policy(np.array([Qvalues]), epsi).T
-        count = 0
         while True:
             count += 1
             chess_prime = chess.clone()
