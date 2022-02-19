@@ -2,6 +2,7 @@ import pickle
 import random
 
 import numpy
+import numpy as np
 
 
 def _epsilon():
@@ -77,6 +78,8 @@ class Network:
         self.W2 = numpy.random.randn(output_dim, K + 1) * 1.0 / numpy.sqrt(K + 1)
         self.eta = eta
         self.mu = mu
+        self.V1 = np.zeros(self.W1.shape)
+        self.V2 = np.zeros(self.W2.shape)
 
     def descent(self, X, T, H, Y):
         G1, G2 = _gradient(X, T, Y, H, self.W2)
