@@ -6,15 +6,15 @@ import numpy as np
 
 
 def train():
-    network = Network(256, 58, 32)
-    episodes = 100000
+    network = Network(1024, 58, 32)
+    episodes = 300000
     epsi = 0.4
     gamma = 0.7
     nr_steps = []
     Qvalues = 2
     count_2 = 0
     for episode in range(episodes):
-        if episode == 150000:
+        if episode == 150000 or episode == 200000:
             network.eta /= 2
         if episode % 100 == 0:
             print(f"\rEpi: {episode}, epsi: {epsi:.3f}, avg. stepsi: {count_2 / 100:.2f}, learni: {network.eta:.4f}",
@@ -41,7 +41,7 @@ def train():
             network.descent(chess_prime.state, target, H, output)
             action = next_action
             Qvalues = Qvalues_prime
-
+            H = H_prime
             if chess.done:
                 nr_steps.append(count_1)
                 break

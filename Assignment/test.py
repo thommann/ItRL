@@ -9,7 +9,7 @@ from Assignment.train import moving_average
 def test():
     network = depickle()
     nr_steps = []
-    for i in range(10000):
+    for i in range(3000):
         test_chess = Chess()
         count = 0
         if i % 100 == 0:
@@ -23,11 +23,12 @@ def test():
             if test_chess.done:
                 nr_steps.append(count)
                 break
-            if count > 1000:
+            if count > 100:
+                print("Bogo hit")
                 nr_steps.append(count)
                 break
             test_chess.move_b()
-    pyplot.plot(moving_average(nr_steps, 100))
+    pyplot.plot(moving_average(nr_steps, 10))
     pyplot.show()
 
 

@@ -12,6 +12,9 @@ def logistic(A):
     return 1. / (1. + numpy.exp(-A))
 
 
+def relu(A):
+    return numpy.maximum(0, A)
+
 def softmax(Z):
     Y = numpy.exp(Z - numpy.max(Z))
     Y /= numpy.sum(Y, axis=0)
@@ -84,10 +87,10 @@ class Network:
         self.W2 -= self.eta * G2
 
     def forward(self, X):
-        H = logistic(numpy.dot(self.W1, X))
+        H = relu(numpy.dot(self.W1, X))
         H[0, :] = 1.
         Z = numpy.dot(self.W2, H)
-        Y = logistic(Z)
+        Y = relu(Z)
         return Y, H
 
 
