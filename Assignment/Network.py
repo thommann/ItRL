@@ -90,8 +90,10 @@ class Network:
         G1, G2 = _gradient(X, T, Y, H, self.W2)
         self.V1 = self.rms * self.V1 + (1 - self.rms) * G1 ** 2
         self.V2 = self.rms * self.V2 + (1 - self.rms) * G2 ** 2
-        self.W1 -= (self.eta / np.sqrt(self.V1 + _epsilon())) * G1
-        self.W2 -= (self.eta / np.sqrt(self.V2 + _epsilon())) * G2
+        # self.W1 -= self.eta * G1 / np.sqrt(self.V1 + _epsilon())
+        # self.W2 -= self.eta * G2 / np.sqrt(self.V2 + _epsilon())
+        self.W1 -= self.eta * G1
+        self.W2 -= self.eta * G2
 
     def forward(self, X):
         H = relu(numpy.dot(self.W1, X))
@@ -102,10 +104,10 @@ class Network:
 
 
 def pickle_network(network):
-    with open("weigths_good_256.pcl", "wb") as f:
+    with open("weigths.pcl", "wb") as f:
         pickle.dump(network, f)
 
 
 def depickle():
-    with open("weigths_good_256.pcl", "rb") as f:
+    with open("weigths.pcl", "rb") as f:
         return pickle.load(f)
