@@ -18,7 +18,9 @@ def train():
             print(f"\repisode: {episode}, "
                   f"epsilon: {epsi:.3f}, "
                   f"moves: {count_100_episodes / 100:.2f}, "
-                  f"eta: {network.eta:.4f}",
+                  f"eta: {network.eta:.4f}, "
+                  f"W1: {np.min(network.W1):.4f}, {np.max(network.W1):.4f}, "
+                  f"W2: {np.min(network.W2):.4f}, {np.max(network.W2):.4f}",
                   end="")
             count_100_episodes = 0
             epsi *= 0.999

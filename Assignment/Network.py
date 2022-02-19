@@ -76,7 +76,7 @@ def epsilon_greedy_policy(Qvalues, epsilon):
 class Network:
     W1, W2 = None, None
 
-    def __init__(self, K, input_dim, output_dim, eta=0.01, mu=0, rho=0.9):
+    def __init__(self, K, input_dim, output_dim, eta=0.01, mu=0, rho=0.9, rmsprop=False):
         # Xavier initialization
         self.W1 = numpy.random.randn(K + 1, input_dim) * 1.0 / numpy.sqrt(input_dim)
         self.W2 = numpy.random.randn(output_dim, K + 1) * 1.0 / numpy.sqrt(K + 1)
@@ -85,18 +85,25 @@ class Network:
         self.rho = rho
         self.V1 = np.zeros(self.W1.shape)
         self.V2 = np.zeros(self.W2.shape)
+        self.l1 = None
+        self.l2 = None
+        self.rmsprop = rmsprop
 
     def descent(self, X, T, H, Y):
         G1, G2 = _gradient(X, T, Y, H, self.W2)
 
-        self.V1 = self.rho * self.V1 + (1 - self.rho) * (G1 ** 2)
-        self.V2 = self.rho * self.V2 + (1 - self.rho) * (G2 ** 2)
+        if self.rmsprop:
+            self.V1 = self.rho * self.V1 + (1 - self.rho) * np.square(G1)
+            self.V2 = self.rho * self.V2 + (1 - self.rho) * np.square(G2)
 
-        self.W1 -= self.eta * G1 / (np.sqrt(self.V1) + _epsilon())
-        self.W2 -= self.eta * G2 / (np.sqrt(self.V2) + _epsilon())
+            self.l1 = (self.eta / (np.sqrt(self.V1) + _epsilon()))
+            self.l2 = (self.eta / (np.sqrt(self.V2) + _epsilon()))
 
-        # self.W1 -= self.eta * G1
-        # self.W2 -= self.eta * G2
+            self.W1 -= self.l1 * G1
+            self.W2 -= self.l2 * G2
+        else:
+            self.W1 -= self.eta * G1
+            self.W2 -= self.eta * G2
 
     def forward(self, X):
         H = relu(numpy.dot(self.W1, X))
