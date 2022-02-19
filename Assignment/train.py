@@ -43,6 +43,7 @@ def train():
             network.descent(chess_prime.state, target, H, output)
             action = next_action
             Qvalues = Qvalues_prime
+            H = H_prime
             total_reward += reward
 
             if chess.done:
