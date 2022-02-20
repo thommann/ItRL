@@ -16,15 +16,20 @@ def train():
     count_2 = 0
     _rewards=[]
     experiences = []
-    batch_size = 200
-    relevant_histories = 600
+    batch_size = 50
+    relevant_histories = 300
     for episode in range(episodes):
         if episode in [10000, 13000, 15000, 17000]:
-            network.eta /= 3
+            network.eta *= 0.7
         if episode % 100 == 0:
-            print(f"\rEpi: {episode}, epsi: {epsi:.3f}, avg. stepsi: {count_2 / 100:.2f}, learni: {network.eta:.4f}",
+            print(f"\rEpi: {episode},"
+                  f" epsi: {epsi:.3f}, "
+                  f"avg. stepsi: {count_2 / 100:.2f}, "
+                  f"learni: {network.eta:.4f} "
+                  f"W1: {np.min(network.W1):.4f}, {np.max(network.W1):.4f}, "
+                  f"W2: {np.min(network.W2):.4f}, {np.max(network.W2):.4f}",
                   end="")
-            epsi *= 0.96
+            epsi *= 0.98
             count_2 = 0
 
         chess = Chess()
@@ -35,7 +40,7 @@ def train():
             chess_prime = chess.clone()
             Qvalues, H = network.forward(chess.state)
             Qvalues -= (1 - chess.get_valid_actions()) * 100000
-            action = epsilon_greedy_policy(np.array([Qvalues]), epsi).T
+            action = epsilon_greedy_policy(np.array(Qvalues), epsi).T
             reward = chess.do_action(action)
             _rewards.append(reward)
             expi = Experience(chess_prime.state, chess.state, action, reward)

@@ -7,13 +7,15 @@ from Assignment.Network import depickle, epsilon_greedy_policy
 from Assignment.train import moving_average
 
 
-def test(filename = "sarsa-256.pcl"):
+def test(filename = "q-experience-replay-256.pcl"):
     network = depickle(filename)
     nr_moves = []
     rewards = []
     bogos = 0
     for i in range(10000):
         test_chess = Chess()
+        # print("new Game")
+        # test_chess.print()
         count = 0
         if i % 100 == 0:
             print(f"\r{i}", end="")
@@ -23,6 +25,7 @@ def test(filename = "sarsa-256.pcl"):
             test_Qvalues -= (1 - test_chess.get_valid_actions()) * 100000
             a = epsilon_greedy_policy(np.array(test_Qvalues), 0).T
             reward = test_chess.do_action(a)
+            #test_chess.print()
             if test_chess.done or count > 100:
                 if count > 100:
                     bogos += 1
@@ -32,6 +35,7 @@ def test(filename = "sarsa-256.pcl"):
                 rewards.append(reward)
                 break
             test_chess.move_b()
+            #test_chess.print()
 
     ema_moves = pd.DataFrame(nr_moves).ewm(halflife=1000).mean()
     ema_rewards = pd.DataFrame(rewards).ewm(halflife=1000).mean()
