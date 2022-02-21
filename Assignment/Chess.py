@@ -69,9 +69,14 @@ class Chess:
         same_column = y == y_q
         diagonal_ll_ur = x - y == x_q - y_q
         diagonal_ul_lr = x + y == x_q + y_q
-        kings_shadow_1 = x - x_q == (x_k - x_q) * 3 and y - y_q == (y_k - y_q) * 3
-        kings_shadow_2 = x - x_q == (x_k - x_q) * 2 and y - y_q == (y_k - y_q) * 2
-        return (same_row or same_column or diagonal_ll_ur or diagonal_ul_lr) and not (kings_shadow_1 or kings_shadow_2)
+        # Q . K X
+        kings_shadow_1 = x - x_q == (x - x_k) * 3 and y - y_q == (y - y_k) * 3
+        # Q K X . and . Q K X
+        kings_shadow_2 = x - x_q == (x - x_k) * 2 and y - y_q == (y - y_k) * 2
+        # Q K . X
+        kings_shadow_3 = x - x_q == (x - x_k) * 1.5 and y - y_q == (y - y_k) * 1.5
+        return (same_row or same_column or diagonal_ll_ur or diagonal_ul_lr) \
+               and not (kings_shadow_1 or kings_shadow_2 or kings_shadow_3)
 
     def game_status(self):
         # Enemy moves
