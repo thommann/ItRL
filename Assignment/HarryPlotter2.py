@@ -18,30 +18,26 @@ def plot(data, y_range, title, file_name, y_label):
     pyplot.show()
 
 
-# SARSA
-# nr_moves_sarsa, rewards_sarsa = train("sarsa")
-# plot(rewards_sarsa, [-1,1.1], "Sarsa: Rewards per Game while training", "sarsa-256-hidden-layers-train-rewards", "Rewards")
-# plot(nr_moves_sarsa, [0,20], "Sarsa: Number of moves per Game while training", "sarsa-256-hidden-layers-train-moves", "Nr moves")
-#
-# nr_moves_sarsa_test, rewards_sarsa_test = test("sarsa-256.pcl")
-# plot(rewards_sarsa_test, [0.8,1.1], "Sarsa: Rewards per Game", "sarsa-256-hidden-layers-test-rewards", "Rewards")
-# plot(nr_moves_sarsa_test, [0,20], "Sarsa: Number of moves per Game", "sarsa-256-hidden-layers-test-moves", "Nr moves")
+def train_test_plot(strategy="q", beta=0.9999, episodes=100000, hidden=256):
+    print(f"Train {strategy}:")
+    if strategy == "er":
+        nr_moves, total_rewards = train_er(beta=beta, episodes=episodes, hidden=hidden)
+    elif strategy == "q" or strategy == "sarsa":
+        nr_moves, total_rewards = train(strategy=strategy, beta=beta, episodes=episodes, hidden=hidden)
+    else:
+        print(f"INVALID STRATEGY: {strategy}")
+        return
 
-# Q-learning
-nr_moves_q, rewards_q = train("q")
-plot(rewards_q, [-1, 1.1], "Q: Rewards per Game while training", "q-256-hidden-layers-train-rewards", "Rewards")
-plot(nr_moves_q, [0, 20], "Q: Number of moves per Game while training", "q-256-hidden-layers-train-moves", "Nr moves")
+    plot(total_rewards, [-1, 1.1], f"{strategy}: Rewards per Game while training", f"{strategy}-{hidden}-train-rewards",
+         "Rewards")
+    plot(nr_moves, [0, 20], f"{strategy}: Number of moves per Game while training", f"{strategy}-{hidden}-train-moves",
+         "Nr moves")
+    print()
 
-nr_moves_q_test, rewards_per_move_q_rest = test("q-256.pcl")
-plot(rewards_per_move_q_rest, [0.8, 1.1], "Q: Rewards per Game", "q-256-hidden-layers-test-rewards", "Rewards")
-plot(nr_moves_q_test, [0, 20], "Q: Number of moves per Game", "q-256-hidden-layers-test-moves", "Nr moves")
-#
-#
-# # Q-learning with experience replay
-# nr_moves_q_er, rewards_q_er = train_er()
-# plot(rewards_q_er, [-1,1.1], "Q + Experience Replay: Rewards per Game while training", "q-er-256-hidden-layers-train-rewards", "Rewards")
-# plot(nr_moves_q_er, [0,20], "Q + Experience Replay: Number of moves per Game while training", "q-er-256-hidden-layers-train-moves", "Nr moves")
-#
-# nr_moves_q_er_test, rewards_per_move_q_er_rest = test("q-experience-replay-256.pcl")
-# plot(rewards_per_move_q_er_rest, [-1,1.1], "Q + Experience Replay: Rewards per Game", "q-er-256-hidden-layers-test-rewards", "Rewards")
-# plot(nr_moves_q_er_test, [0,20], "Q + Experience Replay: Number of moves per Game", "q-er-256-hidden-layers-test-moves", "Nr moves")
+    print(f"Test {strategy}:")
+    nr_moves_test, total_rewards_test = test(strategy=strategy)
+    plot(total_rewards_test, [0.8, 1.1], f"{strategy}: Rewards per Game", f"{strategy}-{hidden}-test-rewards",
+         "Rewards")
+    plot(nr_moves_test, [0, 20], f"{strategy}: Number of moves per Game", f"{strategy}-{hidden}-test-moves",
+         "Nr moves")
+    print()

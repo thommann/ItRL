@@ -4,12 +4,16 @@ from Assignment.Chess import Chess
 from Assignment.Network import depickle, epsilon_greedy_policy
 
 
-def test(filename="q-experience-replay-256.pcl"):
-    network = depickle(filename)
+def test(
+        strategy="q",
+        hidden=256,
+        episodes=10000
+):
+    network = depickle(f"{strategy}-{hidden}.pcl")
     nr_moves = []
     total_rewards = []
-    bogos = 0
-    for i in range(10000):
+    stuck_runs = 0
+    for i in range(episodes):
         test_chess = Chess()
         total_reward = 0
         count = 0
@@ -24,14 +28,16 @@ def test(filename="q-experience-replay-256.pcl"):
             total_reward += reward
             if test_chess.done or count > 100:
                 if count > 100:
-                    bogos += 1
-                    if bogos % 20 == 0:
-                        print(f"Bogo hit: {bogos}")
+                    stuck_runs += 1
+                    if stuck_runs % 20 == 0:
+                        print(f"\rStuck: {stuck_runs}!")
                 nr_moves.append(count)
                 total_rewards.append(total_reward)
                 break
             test_chess.move_b()
 
+    print()
+    print(f"Stuck runs: {stuck_runs}")
     return nr_moves, total_rewards
 
 

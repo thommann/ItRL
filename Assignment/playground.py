@@ -1,8 +1,3 @@
-from Assignment.test import test
-from Assignment.train import train
+from Assignment.HarryPlotter2 import train_test_plot
 
-print("Train:")
-train("q")
-print()
-print("Test:")
-test(filename="q-256.pcl")
+train_test_plot(strategy="sarsa", beta=0.99997)
