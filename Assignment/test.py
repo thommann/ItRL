@@ -1,10 +1,7 @@
 import numpy as np
-from matplotlib import pyplot
-import pandas as pd
 
 from Assignment.Chess import Chess
 from Assignment.Network import depickle, epsilon_greedy_policy
-from Assignment.train import moving_average
 
 
 def test(filename = "q-experience-replay-256.pcl"):
@@ -14,8 +11,7 @@ def test(filename = "q-experience-replay-256.pcl"):
     bogos = 0
     for i in range(10000):
         test_chess = Chess()
-        # print("new Game")
-        # test_chess.print()
+        total_reward = 0
         count = 0
         if i % 100 == 0:
             print(f"\r{i}", end="")
@@ -25,6 +21,7 @@ def test(filename = "q-experience-replay-256.pcl"):
             test_Qvalues -= (1 - test_chess.get_valid_actions()) * 100000
             a = epsilon_greedy_policy(np.array(test_Qvalues), 0).T
             reward = test_chess.do_action(a)
+            total_reward += reward
             #test_chess.print()
             if test_chess.done or count > 100:
                 if count > 100:
@@ -32,25 +29,13 @@ def test(filename = "q-experience-replay-256.pcl"):
                     if bogos % 20 == 0:
                         print(f"Bogo hit: {bogos}")
                 nr_moves.append(count)
-                rewards.append(reward)
+                rewards.append(total_reward)
                 break
             test_chess.move_b()
             #test_chess.print()
 
-    ema_moves = pd.DataFrame(nr_moves).ewm(halflife=1000).mean()
-    ema_rewards = pd.DataFrame(rewards).ewm(halflife=1000).mean()
+    return nr_moves, rewards
 
-    pyplot.figure()
-    pyplot.title("Test: # Moves")
-    pyplot.plot(ema_moves)
-    pyplot.show()
-    pyplot.savefig("test_moves_sarsa.png")
-
-    pyplot.figure()
-    pyplot.title("Test: Reward")
-    pyplot.plot(ema_rewards)
-    pyplot.show()
-    pyplot.savefig("test_reward_sarsa.png")
 
 
 if __name__ == "__main__":

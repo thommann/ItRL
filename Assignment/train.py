@@ -1,11 +1,6 @@
-import pandas as pd
-
-import pandas as pd
 from Assignment.Chess import Chess
-from Assignment.Helper import ewma_vectorized
 from Assignment.Network import Network, epsilon_greedy_policy, pickle_network
 
-from matplotlib import pyplot
 import numpy as np
 
 
@@ -14,10 +9,9 @@ def train(strategy="sarsa"):
     episodes = 300000
     epsi = 0.4
     gamma = 0.7
-    beta = 0.99999
+    beta = 0.999
     nr_moves = []
     rewards_per_move = []
-    rewards = []
     count_100_episodes = 0
     for episode in range(episodes):
         if episode % 100 == 0:
@@ -29,7 +23,7 @@ def train(strategy="sarsa"):
                   f"W2: {np.min(network.W2):.4f}, {np.max(network.W2):.4f}",
                   end="")
             count_100_episodes = 0
-            epsi *= 0.999
+            epsi *= beta
         if episode % 2000 == 0:
             network.eta *= 0.98
 
@@ -44,14 +38,14 @@ def train(strategy="sarsa"):
             count_100_episodes += 1
             chess_prime = chess.clone()
             reward = chess.do_action(action)
+            total_reward += reward
             if chess.done:
                 output = Qvalues * action
                 target = (reward + gamma * reward) * action
                 network.descent(chess_prime.state, target, H, output)
 
                 nr_moves.append(count_episode)
-                rewards_per_move.append(total_reward/count_episode)
-                rewards.append(reward)
+                rewards_per_move.append(total_reward)
                 break
             chess.move_b()
             Qvalues_prime, H_prime = network.forward(chess.state)
@@ -80,32 +74,10 @@ def train(strategy="sarsa"):
                 print(f"Illegal strategy: {strategy}!")
                 break
 
-            total_reward += reward
 
 
-
-    pyplot.figure()
-    pyplot.title("Train: # Moves")
-    pyplot.plot(pd.DataFrame(nr_moves).ewm(halflife=500).mean().to_numpy())
-    pyplot.show()
-    pyplot.savefig("train_moves_sarsa.png")
-
-    pyplot.figure()
-    pyplot.title("Train: Reward per move")
-    pyplot.plot(pd.DataFrame(rewards_per_move).ewm(halflife=500).mean().to_numpy())
-    pyplot.show()
-    pyplot.savefig("train_reward_sarsa.png")
-
-    pyplot.figure()
-    pyplot.title("Train: Reward per game")
-    pyplot.plot(pd.DataFrame(rewards).ewm(halflife=500).mean().to_numpy())
-    pyplot.show()
-
-    pickle_network(network, "sarsa-256.pcl")
-
-
-def moving_average(x, w):
-    return np.convolve(x, np.ones(w), 'valid') / w
+    pickle_network(network, f"{strategy}-256.pcl")
+    return nr_moves, rewards_per_move
 
 
 if __name__ == "__main__":

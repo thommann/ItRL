@@ -1,20 +1,18 @@
 from Assignment.Chess import Chess
 from Assignment.Experience import Experience
 from Assignment.Network import Network, epsilon_greedy_policy, pickle_network
-
-from matplotlib import pyplot
 import numpy as np
 
 
-def train():
+def train_er():
     network = Network(256, 58, 32)
-    episodes = 20000
+    episodes = 2000
     epsi = 0.4
     gamma = 0.7
-    nr_steps = []
-    Qvalues = 2
     count_2 = 0
+
     _rewards=[]
+    nr_moves = []
     experiences = []
     batch_size = 50
     relevant_histories = 300
@@ -34,6 +32,7 @@ def train():
 
         chess = Chess()
         count_1 = 0
+        total_reward = 0
         while True:
             count_1 += 1
             count_2 += 1
@@ -42,7 +41,7 @@ def train():
             Qvalues -= (1 - chess.get_valid_actions()) * 100000
             action = epsilon_greedy_policy(np.array(Qvalues), epsi).T
             reward = chess.do_action(action)
-            _rewards.append(reward)
+            total_reward += reward
             expi = Experience(chess_prime.state, chess.state, action, reward)
             experiences.append(expi)
             if len(experiences) > relevant_histories:
@@ -63,26 +62,16 @@ def train():
                 target = (rewards + gamma * Q_values_after_played) * actions
                 network.descent(state_before, target, H_before, Qvalues_played)
             if chess.done:
-                nr_steps.append(count_1)
+                nr_moves.append(count_1)
+                _rewards.append(total_reward)
                 break
             chess.move_b()
 
-    pyplot.figure()
-    pyplot.title("Train: # Moves")
-    pyplot.plot(moving_average(nr_steps, 500))
-    pyplot.show()
-
-    pyplot.figure()
-    pyplot.title("Train: Reward")
-    pyplot.plot(moving_average(_rewards, 500))
-    pyplot.show()
 
     pickle_network(network, "q-experience-replay-256.pcl")
+    return nr_moves, _rewards
 
-
-def moving_average(x, w):
-    return np.convolve(x, np.ones(w), 'valid') / w
 
 
 if __name__ == "__main__":
-    train()
+    train_er()
