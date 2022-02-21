@@ -6,12 +6,13 @@ import numpy as np
 
 def train(strategy="sarsa"):
     network = Network(256, 58, 32)
-    episodes = 300000
+    episodes = 100000
     epsi = 0.4
     gamma = 0.7
-    beta = 0.999
+    beta = 0.99999
+    eta_decay = 1
     nr_moves = []
-    rewards_per_move = []
+    total_rewards = []
     count_100_episodes = 0
     for episode in range(episodes):
         if episode % 100 == 0:
@@ -23,10 +24,9 @@ def train(strategy="sarsa"):
                   f"W2: {np.min(network.W2):.4f}, {np.max(network.W2):.4f}",
                   end="")
             count_100_episodes = 0
-            epsi *= beta
-        if episode % 2000 == 0:
-            network.eta *= 0.98
 
+        network.eta *= eta_decay
+        epsi *= beta
         chess = Chess()
         Qvalues, H = network.forward(chess.state)
         Qvalues -= (1 - chess.get_valid_actions()) * 100000
@@ -39,18 +39,20 @@ def train(strategy="sarsa"):
             chess_prime = chess.clone()
             reward = chess.do_action(action)
             total_reward += reward
+
             if chess.done:
                 output = Qvalues * action
-                target = (reward + gamma * reward) * action
+                target = reward * action
                 network.descent(chess_prime.state, target, H, output)
 
                 nr_moves.append(count_episode)
-                rewards_per_move.append(total_reward)
+                total_rewards.append(total_reward)
                 break
+
             chess.move_b()
             Qvalues_prime, H_prime = network.forward(chess.state)
             Qvalues_prime -= (1 - chess.get_valid_actions()) * 200000
-            #chess.print()
+
             if strategy == "sarsa":
                 next_action = epsilon_greedy_policy(np.array(Qvalues_prime), epsi).T
             elif strategy == "q":
@@ -74,10 +76,8 @@ def train(strategy="sarsa"):
                 print(f"Illegal strategy: {strategy}!")
                 break
 
-
-
     pickle_network(network, f"{strategy}-256.pcl")
-    return nr_moves, rewards_per_move
+    return nr_moves, total_rewards
 
 
 if __name__ == "__main__":
