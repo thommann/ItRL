@@ -36,9 +36,11 @@ def train_er(
         while True:
             count_1 += 1
             chess_prime = chess.clone()
+
             Qvalues, H = network.forward(chess.state)
             Qvalues -= (1 - chess.get_valid_actions()) * 100000
             action = epsilon_greedy_policy(np.array(Qvalues), epsilon).T
+
             reward = chess.do_action(action)
             total_reward += reward
             expi = Experience(chess_prime.state, chess.state, action, reward)

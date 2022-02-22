@@ -1,5 +1,3 @@
-import numpy as np
-
 
 class Experience:
 	def __init__(self, state_before, state_after, action, reward):

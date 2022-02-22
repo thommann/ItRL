@@ -32,6 +32,7 @@ def train(
         Qvalues, H = network.forward(chess.state)
         Qvalues -= (1 - chess.get_valid_actions()) * 100000
         action = epsilon_greedy_policy(np.array(Qvalues), epsilon).T
+
         count_episode = 0
         total_reward = 0
         while True:
