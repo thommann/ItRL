@@ -12,9 +12,13 @@ from generate_game import *
 class Chess_Env:
 
 
-    def __init__(self, N_grid):
+    def __init__(self, N_grid, extended_features=True, R=0, R_checked=1, R_draw=0):
 
         self.N_grid = N_grid                     # SIZE OF THE BOARD
+        self.extended_features = extended_features # Adds additional information (n-moves, checked) to features
+        self.R = R
+        self.R_checked = R_checked
+        self.R_draw = R_draw
         
         self.Board=np.zeros([N_grid,N_grid])   # THE BOARD, THIS WILL BE FILLED BY 0 (NO PIECE), 1 (AGENT'S KING), 2 (AGENT'S QUEEN), 3 (OPPONENT'S KING)
         
@@ -80,7 +84,7 @@ class Chess_Env:
     def OneStep(self,a_agent):
         
         # SET REWARD TO ZERO IF GAME IS NOT ENDED
-        R=0
+        R=self.R
         # SET Done TO ZERO (GAME NOT ENDED)
         Done=0
         
@@ -132,7 +136,7 @@ class Chess_Env:
             # King 2 has no freedom and it is checked
             # Checkmate and collect reward
             Done = 1       # The epsiode ends
-            R = 1          # Reward for checkmate
+            R = self.R_checked          # Reward for checkmate
             allowed_a=[]   # Allowed_a set to nothing (end of the episode)
             X=[]           # Features set to nothing (end of the episode)
         
@@ -141,7 +145,7 @@ class Chess_Env:
            
             # King 2 has no freedom but it is not checked
             Done = 1        # The epsiode ends
-            R = 0.       # Reward for draw
+            R = self.R_draw       # Reward for draw
             allowed_a=[]    # Allowed_a set to nothing (end of the episode)
             X=[]            # Features set to nothing (end of the episode)
         
@@ -192,17 +196,16 @@ class Chess_Env:
         s_k1 = np.array(self.Board == 1).astype(float).reshape(-1)   # FEATURES FOR KING POSITION
         s_q1 = np.array(self.Board == 2).astype(float).reshape(-1)   # FEATURES FOR QUEEN POSITION
         s_k2 = np.array(self.Board == 3).astype(float).reshape(-1)   # FEATURE FOR ENEMY'S KING POSITION
+
+        if self.extended_features:
+            check=np.zeros([2])    # CHECK? FEATURE
+            check[self.check]=1
         
-        check=np.zeros([2])    # CHECK? FEATURE
-        check[self.check]=1   
-        
-        K2dof=np.zeros([8])   # NUMBER OF ALLOWED ACTIONS FOR ENEMY'S KING, ONE-HOT ENCODED
-        K2dof[np.sum(self.dfk2_constrain).astype(int)]=1
-        
-        # ALL FEATURES...
-        x = np.concatenate([s_k1, s_q1, s_k2, check, K2dof],0)
-        
-        return x
+            K2dof=np.zeros([8])   # NUMBER OF ALLOWED ACTIONS FOR ENEMY'S KING, ONE-HOT ENCODED
+            K2dof[np.sum(self.dfk2_constrain).astype(int)]=1
+
+            return np.concatenate([s_k1, s_q1, s_k2, check, K2dof],0)
+        return np.concatenate([s_k1, s_q1, s_k2],0)
 
 
 
