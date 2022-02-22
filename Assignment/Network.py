@@ -15,6 +15,7 @@ def logistic(A):
 def relu(A):
     return np.maximum(0, A)
 
+
 def softmax(Z):
     Y = np.exp(Z - np.max(Z))
     Y /= np.sum(Y, axis=0)
@@ -44,34 +45,6 @@ def _gradient(X, T, Y, H, W2):
     G1 = (2. / len(X)) * np.dot(np.dot(W2.T, (Y - T)) * H * (1. - H), X.T)
     G2 = (2. / len(X)) * np.dot((Y - T), H.T)
     return G1, G2
-
-
-def epsilon_greedy_policy(Qvalues, epsilon):
-    N_class = np.shape(Qvalues)[0]
-    batch_size = np.shape(Qvalues)[1]
-
-    rand_values = np.random.uniform(0, 1, [batch_size])
-
-    rand_a = rand_values < epsilon
-    a = np.zeros([batch_size, N_class])
-
-    for i in range(batch_size):
-
-        if rand_a[i]:
-            #print("epsilon")
-            while 1:
-                randi = np.random.randint(0, N_class)
-                if Qvalues[randi, i] > -10000:
-                    break
-            a[i, randi] = 1
-
-        else:
-            #print("greedy")
-            a[i, np.argmax(Qvalues[:,i])] = 1
-
-    #print(np.argmax(a))
-    #print(Qvalues[np.argmax(a),0])
-    return a
 
 
 class Network:
