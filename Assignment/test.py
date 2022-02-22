@@ -18,7 +18,7 @@ def test(
         total_reward = 0
         count = 0
         if i % 100 == 0:
-            print(f"\r{i}", end="")
+            print(f"\rEpisode: {i}, Bogos: {stuck_runs}", end="")
         while True:
             count += 1
             test_Qvalues, _ = network.forward(test_chess.state)
@@ -29,15 +29,11 @@ def test(
             if test_chess.done or count > 100:
                 if count > 100:
                     stuck_runs += 1
-                    if stuck_runs % 20 == 0:
-                        print(f"\rStuck: {stuck_runs}!")
                 nr_moves.append(count)
                 total_rewards.append(total_reward)
                 break
             test_chess.move_b()
 
-    print()
-    print(f"Stuck runs: {stuck_runs}")
     return nr_moves, total_rewards
 
 
